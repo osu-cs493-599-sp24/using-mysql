@@ -2,6 +2,7 @@ const { Router } = require('express')
 const { ValidationError } = require("sequelize")
 
 const Lodging = require("../models/lodging")
+const Reservation = require("../models/reservation")
 
 const router = Router()
 
@@ -13,7 +14,8 @@ router.get('/', async function (req, res, next) {
 
     const result = await Lodging.findAndCountAll({
         limit: pageSize,
-        offset: offset
+        offset: offset,
+        // where: { zip: "97330" }
     })
     res.status(200).send({
         lodgings: result.rows,
@@ -47,9 +49,18 @@ router.post('/', async function (req, res, next) {
     }
 })
 
-router.get('/:id', function (req, res, next) {
+router.get('/:id', async function (req, res, next) {
     const id = req.params.id
-    res.status(200).send({})
+    const lodging = await Lodging.findByPk(id, {
+        include: Reservation
+    })
+    if (lodging) {
+        // const reservations = await lodging.getReservations()
+        // console.log(" -- reservations:", reservations)
+        res.status(200).send(lodging)
+    } else {
+        next()
+    }
 })
 
 router.patch('/:id', function (req, res, next) {
